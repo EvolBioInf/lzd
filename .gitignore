@@ -1,0 +1,7 @@
+bin/
+doc/lzdDoc.aux
+doc/lzdDoc.bbl
+doc/lzdDoc.blg
+doc/lzdDoc.log
+doc/lzdDoc.pdf
+src/*.o

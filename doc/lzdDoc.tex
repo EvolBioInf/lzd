@@ -1,0 +1,119 @@
+\documentclass{article}
+\usepackage{graphics,eurosym,latexsym}
+\usepackage{listings}
+\lstset{columns=fixed,basicstyle=\ttfamily,numbers=left,numberstyle=\tiny,stepnumber=5,breaklines=true}
+\usepackage{times}
+\usepackage[round]{natbib}
+\bibliographystyle{plainnat}
+\oddsidemargin=0cm
+\evensidemargin=0cm
+\newcommand{\be}{\begin{enumerate}}
+\newcommand{\ee}{\end{enumerate}}
+\newcommand{\bi}{\begin{itemize}}
+\newcommand{\ei}{\end{itemize}}
+\newcommand{\I}{\item}
+\newcommand{\ty}{\texttt}
+\newcommand{\kr}{K_{\rm r}}
+\textwidth=16cm
+\textheight=23cm
+\begin{document}
+\title{\ty{lzd}, v. 0.7, Lempel-Ziv Decomposition}
+\author{Bernhard Haubold}
+\date{February 29, 2024}
+\maketitle
+\section{Introduction}
+The Lempel-Ziv decomposition is central to data compression algorithms
+and the program \ty{lzd} serves as a didactic tool to generate the
+decomposition, which divides a string into repeating
+subunits~\citep{ziv77:uni}. More formally, let $S$ be a string, then
+starting at the first position of $S$, $S[1]$, look for the longest
+prefix of $S[1..]$ that is repeated somewhere to the left of
+$S[1]$. If there is no repeat, as in the case of the first character,
+the character itself is the factor. The factor is skipped, and the
+search for the next factor starts at $S[2]$, and so on. For example,
+let $S=\ty{CCCTCTGCGA}$, the decomposition is
+\[
+\ty{C.CC.T.CT.G.C.G.A}
+\]
+We can think of these factors as being ``left''-repeats, as the repeat
+starting at $S[i]$ is always located to the left of $S[i]$, while the
+remainder of the string to the right is ignored.
+
+The program \ty{lzd} calculates the Lempel-Ziv decomposition using the
+algorithm by \citet{cro08:sim}, and it can also generate and a table
+like the one shown in their Figure 1.
+
+\section{Tutorial}
+The input string for \ty{lzd} needs to be in FASTA format, which is
+widely used in bioinformatics and consists of a header line beginning
+with \verb+>+, followed by the text on an arbitrary
+number of non-empty lines. For an example, here is the sequence
+factorized above:
+\begin{verbatim}
+$ cat data/test.fasta
+>TestSeq
+CCCTCTGCGA
+\end{verbatim}
+To factorize it, enter
+\begin{verbatim}
+$ lzd data/test.fasta 
+C.CC.T.CT.G.C.G.A
+\end{verbatim}
+To factorize the example string used by \citet{cro08:sim}, enter
+\begin{verbatim}
+lzd data/algPaper.fasta 
+a.b.b.a.abb.baa.ab.ab
+\end{verbatim}
+To also reproduce Figure 1 by \citet{cro08:sim}, generate tabular
+output with the \ty{-t} option:
+\begin{verbatim}
+$ lzd -t data/algPaper.fasta 
+i       w[i]    sa[i]   lcp[i]  lpf[i]
+0       a       8       0       0
+1       b       9       2       0
+2       b       3       0       1
+3       a       12      1       1
+4       a       10      1       3
+5       b       0       0       2
+6       b       4       3       4
+7       b       13      0       3
+8       a       7       0       2
+9       a       2       0       3
+10      a       11      2       2
+11      b       6       1       2
+12      a       1       0       2
+13      b       5       2       1
+a.b.b.a.abb.baa.ab.ab
+\end{verbatim}
+For nicer typesetting the table can be rendered in \LaTeX{} to give
+Table~\ref{tab:lzd}.
+\begin{verbatim}
+$ lzd -t -l data/algPaper.fasta > tab.tex
+\end{verbatim}
+\begin{table}
+  \caption{The data tables underlying the Lempel-Ziv decomposition of
+    the example string \ty{abbaabbbaaabab}; the actual decomposition
+    is shown at the bottom of the table. The details of the table's
+    contents are explained by \citet{cro08:sim}.}\label{tab:lzd}
+  \begin{center}
+    \input{tab.tex}
+  \end{center}
+\end{table}
+Finally, there is also the option to print the match factors used by
+\citet{pir19:hig}.
+\begin{verbatim}
+$ lzd -m data/algPaper.fasta
+abb.aab.bbaa.ab.ab
+\end{verbatim}
+\section{Listings}
+The following listings document central parts of \ty{lzd}.
+\lstset{language=c}
+\subsection{The Driver Program: \ty{lzd.c}}
+\lstinputlisting{../src/lzd.c}
+\subsection{Calculating the Enhanced Suffix Array: \ty{esa.c}}
+\lstinputlisting{../src/esa.c}
+\subsection{Lampel-Ziv Factorization: \ty{factor.c}}
+\lstinputlisting{../src/factor.c}
+\bibliography{ref}
+\end{document}
+
